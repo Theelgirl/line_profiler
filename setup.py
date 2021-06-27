@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 from os.path import exists
-import os
 import sys
 import setuptools  # NOQA
 from setuptools import find_packages
@@ -151,13 +150,30 @@ def parse_requirements(fname='requirements.txt', with_version=True):
     return packages
 
 
-def native_mb_python_tag():
-    import sys
-    import platform
-    major = sys.version_info[0]
-    minor = sys.version_info[1]
-    ver = '{}{}'.format(major, minor)
-    if platform.python_implementation() == 'CPython':
+def native_mb_python_tag(plat_impl=None, version_info=None):
+    """
+    Get the correct manylinux python version tag for this interpreter
+
+    Example:
+        >>> print(native_mb_python_tag())
+        >>> print(native_mb_python_tag('PyPy', (2, 7)))
+        >>> print(native_mb_python_tag('CPython', (3, 8)))
+    """
+    if plat_impl is None:
+        import platform
+        plat_impl = platform.python_implementation()
+
+    if version_info is None:
+        import sys
+        version_info = sys.version_info
+
+    major, minor = version_info[0:2]
+    if minor > 9:
+        ver = '{}_{}'.format(major, minor)
+    else:
+        ver = '{}{}'.format(major, minor)
+
+    if plat_impl == 'CPython':
         # TODO: get if cp27m or cp27mu
         impl = 'cp'
         if ver == '27':
@@ -172,44 +188,16 @@ def native_mb_python_tag():
                 abi = ''
             else:
                 abi = 'm'
+        mb_tag = '{impl}{ver}-{impl}{ver}{abi}'.format(**locals())
+    elif plat_impl == 'PyPy':
+        abi = ''
+        impl = 'pypy'
+        ver = '{}{}'.format(major, minor)
+        mb_tag = '{impl}-{ver}'.format(**locals())
     else:
-        raise NotImplementedError(impl)
-    mb_tag = '{impl}{ver}-{impl}{ver}{abi}'.format(**locals())
+        raise NotImplementedError(plat_impl)
     return mb_tag
 
-
-USE_SKBUILD = True
-if not USE_SKBUILD:
-    # Monkeypatch distutils.
-    import distutils.errors
-    # from distutils.core import setup
-    from distutils.extension import Extension
-    from distutils.log import warn
-    from setuptools import setup
-    # use setuptools
-    try:
-        from Cython.Distutils import build_ext
-        cmdclass = dict(build_ext=build_ext)
-        line_profiler_source = '_line_profiler.pyx'
-    except ImportError:
-        cmdclass = {}
-        line_profiler_source = '_line_profiler.c'
-        if not os.path.exists(line_profiler_source):
-            raise distutils.errors.DistutilsError("""\
-    You need Cython to build the line_profiler from a git checkout, or
-    alternatively use a release tarball from PyPI to build it without Cython.""")
-        else:
-            warn("Could not import Cython. "
-                 "Using the available pre-generated C file.")
-
-    setupkw = dict(
-        cmdclass=cmdclass,
-        ext_modules=[
-            Extension('_line_profiler',
-                      sources=[line_profiler_source, 'timers.c', 'unset_trace.c'],
-                      depends=['python25.pxd']),
-        ],
-    )
 
 long_description = """\
 line_profiler will profile the time individual lines of code take to execute.
@@ -226,43 +214,15 @@ MB_PYTHON_TAG = native_mb_python_tag()
 NAME = 'line_profiler'
 
 
-def _augment_version(VERSION):
-    from os.path import join, dirname, exists
-    repo_dpath = join(dirname(__file__))
-    git_dpath = join(repo_dpath, '.git')
-    if exists(git_dpath):
-        head_fpath = join(git_dpath, 'HEAD')
-        with open(head_fpath, 'r') as file:
-            head_contents = file.read()
-        part1 = head_contents.split(' ')[0]
-        if part1 == 'ref:':
-            ref = head_contents.split('\n')[0].split()[-1]
-            ref_fpath = join(git_dpath, ref)
-            with open(ref_fpath, 'r') as file:
-                ref_hash = file.read().strip()
-        else:
-            ref = None
-            ref_hash = head_contents.split('\n')[0][0:8]
-        hashid = ref_hash[0:8]
-        if ref != 'refs/heads/release':
-            VERSION = VERSION.split('+')[0] + '+' + hashid
-    return VERSION
-
-
-VERSION = _augment_version(VERSION)
-
-
 if __name__ == '__main__':
-    if USE_SKBUILD:
-        if '--universal' in sys.argv:
-            # Dont use scikit-build for universal wheels
-            # if 'develop' in sys.argv:
-            sys.argv.remove('--universal')
-            from setuptools import setup  # NOQA
-        else:
-            from skbuild import setup
-        setupkw = dict()
-    setupkw.update(dict(
+    if '--universal' in sys.argv:
+        # Dont use scikit-build for universal wheels
+        # if 'develop' in sys.argv:
+        sys.argv.remove('--universal')
+        from setuptools import setup  # NOQA
+    else:
+        from skbuild import setup
+    setupkw = dict(
         name=NAME,
         version=VERSION,
         author='Robert Kern',
@@ -304,5 +264,5 @@ if __name__ == '__main__':
             'tests': parse_requirements('requirements/tests.txt'),
             'build': parse_requirements('requirements/build.txt'),
         },
-    ))
+    )
     setup(**setupkw)

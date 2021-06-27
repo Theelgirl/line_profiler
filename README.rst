@@ -1,7 +1,7 @@
 line_profiler and kernprof
 --------------------------
 
-|Pypi| |Downloads| |CircleCI|
+|Pypi| |Downloads| |CircleCI| |ActionsTest| |Codecov|
 
 
 NOTICE: This is the official `line_profiler` repository. The most recent
@@ -52,6 +52,11 @@ required in that case.
 a compiler.  If you wish to use it to run cProfile and not line-by-line
 profiling, you may copy it to a directory on your `PATH` manually and avoid
 trying to build any C extensions.
+
+As of 2021-04-25, only the linux binaries are available on pypi. If you are on
+windows and are unable to build from source, consider using Christoph Gohlke's
+unofficial line-profiler 
+`precompiled win32 wheels <https://www.lfd.uci.edu/~gohlke/pythonlibs/#line_profiler>`_.
 
 .. _git: http://git-scm.com/
 .. _Cython: http://www.cython.org
@@ -389,3 +394,5 @@ See `CHANGELOG`_.
    :target: https://pypi.python.org/pypi/line_profiler
 .. |Downloads| image:: https://img.shields.io/pypi/dm/line_profiler.svg
    :target: https://pypistats.org/packages/line_profiler
+.. |ActionsTest| image:: https://github.com/pyutils/line_profiler/actions/workflows/tests.yml/badge.svg
+   :target: https://github.com/pyutils/line_profiler/actions/workflows/tests.yml

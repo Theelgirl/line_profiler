@@ -12,10 +12,9 @@ import concurrent.futures
 import time
 from argparse import ArgumentError, ArgumentParser
 
-try:
-    from line_profiler import __version__
-except ImportError:
-    __version__ = 'UNKNOWN'
+# NOTE: This version needs to be manually maintained with the line_profiler
+# __version__ for now.
+__version__ = '3.3.0'
 
 PY3 = sys.version_info[0] == 3
 
@@ -214,7 +213,7 @@ def main(args=None):
     parser.add_argument('-v', '--view', action='store_true',
         help="View the results of the profile in addition to saving it")
     parser.add_argument('-u', '--unit', default='1e-6', type=positive_float,
-        
+
         help="Output unit (in seconds) in which the timing info is "
         "displayed (default: 1e-6)")
     parser.add_argument('-z', '--skip-zero', action='store_true',
@@ -284,7 +283,11 @@ def main(args=None):
         prof.dump_stats(options.outfile)
         print('Wrote profile results to %s' % options.outfile)
         if options.view:
-            prof.print_stats(output_unit=options.unit, stripzeros=options.skip_zero)
+            if isinstance(prof, ContextualProfile):
+                prof.print_stats()
+            else:
+                prof.print_stats(output_unit=options.unit,
+                                 stripzeros=options.skip_zero)
 
 
 if __name__ == '__main__':

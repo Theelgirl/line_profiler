@@ -1,6 +1,33 @@
 Changes
 =======
 
+3.3.0
+~~~~~
+* New CI for building wheels.
+
+3.2.6
+~~~~~
+* FIX: Update MANIFEST.in to package pyproj.toml and missing pyx file
+* CHANGE: Removed version experimental augmentation. 
+
+3.2.5
+~~~~~
+* FIX: Update MANIFEST.in to package nested c source files in the sdist
+
+3.2.4
+~~~~~
+* FIX: Update MANIFEST.in to package nested CMakeLists.txt in the sdist
+
+3.2.3
+~~~~~
+* FIX: Use ImportError instead of ModuleNotFoundError while 3.5 is being supported
+* FIX: Add MANIFEST.in to package CMakeLists.txt in the sdist
+
+3.2.2
+~~~~~
+* ENH: Added better error message when c-extension is not compiled.
+* FIX: Kernprof no longer imports line_profiler to avoid side effects.
+
 3.2.0
 ~~~~~
 * Dropped 2.7 support, manylinux docker images no longer support 2.7 
